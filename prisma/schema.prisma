@@ -1,12 +1,3 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 model Client {
   id        String   @id @default(uuid())
   name      String
@@ -14,5 +5,42 @@ model Client {
   age       Int
   status    Boolean
   profile   String
-  createdAt DateTime @default(now())
+  goals     Goal[]
+  wallet    Wallet?
+  events    Event[]
+  simulations Simulation[]
+}
+
+model Goal {
+  id         String   @id @default(uuid())
+  clientId   String
+  type       String
+  targetDate DateTime
+  targetValue Float
+  client     Client   @relation(fields: [clientId], references: [id])
+}
+
+model Wallet {
+  id         String   @id @default(uuid())
+  clientId   String
+  totalValue Float
+  allocations Json
+  client     Client   @relation(fields: [clientId], references: [id])
+}
+
+model Event {
+  id         String   @id @default(uuid())
+  clientId   String
+  type       String
+  value      Float
+  frequency  String
+  client     Client   @relation(fields: [clientId], references: [id])
+}
+
+model Simulation {
+  id         String   @id @default(uuid())
+  clientId   String
+  createdAt  DateTime @default(now())
+  result     Json
+  client     Client   @relation(fields: [clientId], references: [id])
 }
