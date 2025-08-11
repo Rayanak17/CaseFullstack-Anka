@@ -1,60 +1,54 @@
-import { Request, Response, NextFunction } from 'express';
-import * as service from './service';
-import { createClientSchema, updateClientSchema } from './schema';
+import { FastifyRequest, FastifyReply } from 'fastify';
 
-export const create = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const parsed = createClientSchema.safeParse(req.body);
-
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.format() });
-    }
-
-    const client = await service.createClient(parsed.data);
-    res.status(201).json(client);
-  } catch (err) {
-    next(err);
-  }
+type ClientPayload = {
+  name: string;
+  email: string;
+  age: number;
+  status: boolean;
+  profile: string;
 };
 
-export const list = async (_: Request, res: Response, next: NextFunction) => {
-  try {
-    const clients = await service.getClients();
-    res.json(clients);
-  } catch (err) {
-    next(err);
-  }
+type ClientUpdate = Partial<ClientPayload>;
+
+type Params = {
+  id: string;
 };
 
-export const get = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const client = await service.getClientById(req.params.id);
-    if (!client) return res.status(404).json({ error: 'Client not found' });
-    res.json(client);
-  } catch (err) {
-    next(err);
-  }
-};
+export async function create(request: FastifyRequest, reply: FastifyReply) {
+  const { name, email, age, status, profile } = request.body as ClientPayload;
 
-export const update = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const parsed = updateClientSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ error: parsed.error.format() });
-    }
+  const newClient = {
+    id: Math.random().toString(36).substring(2, 9),
+    name,
+    email,
+    age,
+    status,
+    profile
+  };
 
-    const client = await service.updateClient(req.params.id, parsed.data);
-    res.json(client);
-  } catch (err) {
-    next(err);
-  }
-};
+  reply.code(201).send(newClient);
+}
 
-export const remove = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await service.deleteClient(req.params.id);
-    res.status(204).send();
-  } catch (err) {
-    next(err);
-  }
-};
+export async function list(request: FastifyRequest, reply: FastifyReply) {
+  reply.send([{ id: 'abc123', name: 'Rayana', email: 'rayana@example.com' }]);
+}
+
+export async function get(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
+  const { id } = request.params;
+  reply.send({ id, name: 'Rayana', email: 'rayana@example.com' });
+}
+
+export async function update(
+  request: FastifyRequest<{ Params: Params; Body: ClientUpdate }>,
+  reply: FastifyReply
+) {
+  const { id } = request.params;
+  const updates = request.body;
+
+  reply.send({ id, ...updates });
+}
+
+export async function remove(request: FastifyRequest<{ Params: Params }>, reply: FastifyReply) {
+  const { id } = request.params;
+  reply.code(204).send();
+}

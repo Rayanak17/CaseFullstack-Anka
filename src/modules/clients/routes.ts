@@ -1,13 +1,40 @@
-import { Router } from 'express';
+import { FastifyInstance } from 'fastify';
 import * as controller from './controller';
 import { requireAuth } from '../../middleware/auth';
 
-const router = Router();
+export default async function clientsRoutes(app: FastifyInstance) {
+  app.route({
+    method: 'GET',
+    url: '/',
+    preHandler: requireAuth(['advisor', 'viewer']),
+    handler: controller.list
+  });
 
-router.post('/', requireAuth(['advisor']), controller.create);
-router.get('/', requireAuth(['advisor', 'viewer']), controller.list);
-router.get('/:id', requireAuth(['advisor', 'viewer']), controller.get);
-router.put('/:id', requireAuth(['advisor']), controller.update);
-router.delete('/:id', requireAuth(['advisor']), controller.remove);
+  app.route({
+    method: 'POST',
+    url: '/',
+    preHandler: requireAuth(['advisor']),
+    handler: controller.create
+  });
 
-export default router;
+  app.route({
+    method: 'GET',
+    url: '/:id',
+    preHandler: requireAuth(['advisor', 'viewer']),
+    handler: controller.get
+  });
+
+  app.route({
+    method: 'PUT',
+    url: '/:id',
+    preHandler: requireAuth(['advisor']),
+    handler: controller.update
+  });
+
+  app.route({
+    method: 'DELETE',
+    url: '/:id',
+    preHandler: requireAuth(['advisor']),
+    handler: controller.remove
+  });
+}
