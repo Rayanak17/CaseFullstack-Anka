@@ -1,46 +1,64 @@
+datasource db {
+  provider = "postgresql" // ou "mysql", "sqlite", conforme seu banco
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
 model Client {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  age       Int
-  status    Boolean
-  profile   String
-  goals     Goal[]
-  wallet    Wallet?
-  events    Event[]
+  id          String       @id @default(uuid())
+  name        String
+  email       String       @unique
+  age         Int
+  status      Boolean
+  profile     String
+  goals       Goal[]
+  wallet      Wallet? // um cliente tem UMA wallet (one-to-one)
+  events      Event[]
   simulations Simulation[]
+  insurances  Insurance[] // um cliente pode ter várias apólices (one-to-many)
 }
 
 model Goal {
-  id         String   @id @default(uuid())
-  clientId   String
-  type       String
-  targetDate DateTime
+  id          String   @id @default(uuid())
+  clientId    String
+  type        String
+  targetDate  DateTime
   targetValue Float
-  client     Client   @relation(fields: [clientId], references: [id])
+  client      Client   @relation(fields: [clientId], references: [id])
 }
 
 model Wallet {
-  id         String   @id @default(uuid())
-  clientId   String
-  totalValue Float
+  id          String @id @default(uuid())
+  clientId    String @unique
+  totalValue  Float
   allocations Json
-  client     Client   @relation(fields: [clientId], references: [id])
+  client      Client @relation(fields: [clientId], references: [id])
 }
 
 model Event {
-  id         String   @id @default(uuid())
-  clientId   String
-  type       String
-  value      Float
-  frequency  String
-  client     Client   @relation(fields: [clientId], references: [id])
+  id        String @id @default(uuid())
+  clientId  String
+  type      String
+  value     Float
+  frequency String
+  client    Client @relation(fields: [clientId], references: [id])
 }
 
 model Simulation {
-  id         String   @id @default(uuid())
-  clientId   String
-  createdAt  DateTime @default(now())
-  result     Json
-  client     Client   @relation(fields: [clientId], references: [id])
+  id        String   @id @default(uuid())
+  clientId  String
+  createdAt DateTime @default(now())
+  result    Json
+  client    Client   @relation(fields: [clientId], references: [id])
+}
+
+model Insurance {
+  id       String @id @default(uuid())
+  clientId String
+  type     String // "vida" | "invalidez"
+  value    Float
+  client   Client @relation(fields: [clientId], references: [id])
 }
